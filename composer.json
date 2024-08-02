@@ -1,0 +1,20 @@
+{
+    "name": "builtnorth/wp-post-types",
+    "description": "Core functionality that is used on BuiltNorth WordPress sites. Adds security and hardening features and cleans up some default functionality.",
+    "type": "library",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Built North",
+            "homepage": "https://builtnorth.co"
+        }
+    ],
+    "require": {
+        "php": ">=8.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "BuiltNorth\\PostTypesConstructor\\": "inc/"
+        }
+    }
+}
