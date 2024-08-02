@@ -13,103 +13,95 @@ This library is meant to be dropped into a theme or plugin via composer: `compos
 
 ## Features
 
-This library contains a number of features that streamline the process of creating custom post types. It is reccomended to register a class for each of your post types to streamline registration of all features, but that is not neccessary.
+Contains a number of features that streamline the process of creating custom post types. It is reccomended to register a class for each of your post types to streamline registration of all features, but that is not neccessary.
 
-Note that features should be registered on the `init` hook at a priority less than `10`.
+Note that features should be registered on the `init` hook at a priority less than `10`. Or if you are using the package in a plugin, the `plugins_loaded` hook also works.
 
 -   Post Type Registration
 -   Taxonmy Registration
 -   Post Meta Registration
--   Admin Column Setup
+-   Admin Columns Setup
 
 ### Post Type Registration
 
-To register a post type, simply call the follwoing in your theme or plugin. `args` are all optional, and any valid arguments can be used.
-
 ```
-<?php
-	if (class_exists('BuiltNorth\PostTypesConstructor\PostType')) {
-		new \BuiltNorth\PostTypesConstructor\PostType(
-			prefix: 'your_prefix_',
-			name: 'example',
-			slug: 'example',
-			archive: 'examples',
-			singular: 'Example',
-			plural: 'Examples',
-			args: [
-				'menu_icon' => 'dashicons-index-card',
-				'supports' => [
-					'editor', 'title', 'thumbnail', 'page-attributes', 'custom-fields'
-				],
-				'hierarchical' => false,
-			]
-		);
-	}
-?>
+if (class_exists('BuiltNorth\PostTypesConstructor\PostType')) {
+	new \BuiltNorth\PostTypesConstructor\PostType(
+		prefix: 'your_prefix_',
+		name: 'example',
+		slug: 'example',
+		archive: 'examples',
+		singular: 'Example',
+		plural: 'Examples',
+		args: [
+			'menu_icon' => 'dashicons-index-card',
+			'supports' => [
+				'editor', 'title', 'thumbnail', 'page-attributes', 'custom-fields'
+			],
+			'hierarchical' => false,
+		]
+	);
+}
 ```
 
 ### Taxonomy Registration
 
 ```
-<?php
-	if (class_exists('BuiltNorth\PostTypesConstructor\Taxonomy')) {
-		new \BuiltNorth\PostTypesConstructor\Taxonomy(
-			prefix: 'your_prefix_',
-			name: 'type',
-			slug: 'types',
-			singular: 'Type',
-			plural: 'Types',
-			post_type_name: 'example',
-			args: [
-				'hierarchical' => true,
-			]
-		);
-	}
-<?php>
+if (class_exists('BuiltNorth\PostTypesConstructor\Taxonomy')) {
+	new \BuiltNorth\PostTypesConstructor\Taxonomy(
+		prefix: 'your_prefix_',
+		name: 'type',
+		slug: 'types',
+		singular: 'Type',
+		plural: 'Types',
+		post_type_name: 'example',
+		args: [
+			'hierarchical' => true,
+		]
+	);
+}
 ```
 
 ### Post Meta Registration
 
 ```
 if (class_exists('BuiltNorth\PostTypesConstructor\PostMeta')) {
-		new \BuiltNorth\PostTypesConstructor\PostMeta(
-			prefix: 'your_prefix_',
-			post_type_name: 'example',
-			meta: [
-				'sample_text' => [
-					'type' => 'string'
-				],
-				'sample_boolean' => [
-					'type' => 'boolean',
-					'default' => false
-				],
-				'sample_integer' => [
-					'type' => 'integer',
-					'sanitize_callback' => 'absint'
-				]
+	new \BuiltNorth\PostTypesConstructor\PostMeta(
+		prefix: 'your_prefix_',
+		post_type_name: 'example',
+		meta: [
+			'sample_text' => [
+				'type' => 'string'
+			],
+			'sample_boolean' => [
+				'type' => 'boolean',
+				'default' => false
+			],
+			'sample_integer' => [
+				'type' => 'integer',
+				'sanitize_callback' => 'absint'
 			]
-		);
-	}
+		]
+	);
+}
 ```
 
 ### Admin Columns Setup
 
 ```
-<?php
-	if (class_exists('BuiltNorth\PostTypesConstructor\AdminColumns')) {
-		new \BuiltNorth\PostTypesConstructor\AdminColumns(
-			prefix: 'your_prefix_',
-			post_type_name: 'example',
-			columns: [
-				'sample_text' => [
-					'label' => __('Sample Text', 'compass-companion'),
-					'meta_key' => 'your_prefix_example_sample_text',
-					'width' => '15%',
-				],
-			]
-		);
-	}
-?>
+if (class_exists('BuiltNorth\PostTypesConstructor\AdminColumns')) {
+	new \BuiltNorth\PostTypesConstructor\AdminColumns(
+		prefix: 'your_prefix_',
+		post_type_name: 'example',
+		columns: [
+			'sample_text' => [
+				'label' => __('Sample Text', 'compass-companion'),
+				'meta_key' => 'your_prefix_example_sample_text',
+				'width' => '15%',
+			],
+		]
+	);
+}
 ```
 
 ## Disclaimer
