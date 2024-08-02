@@ -95,7 +95,7 @@ if (class_exists('BuiltNorth\PostTypesConstructor\AdminColumns')) {
 		post_type_name: 'example',
 		columns: [
 			'sample_text' => [
-				'label' => __('Sample Text', 'compass-companion'),
+				'label' => __('Sample Text', 'your-text-domain'),
 				'meta_key' => 'your_prefix_example_sample_text',
 				'width' => '15%',
 			],
