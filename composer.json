@@ -1,6 +1,6 @@
 {
     "name": "builtnorth/wp-post-types",
-    "description": "Core functionality that is used on BuiltNorth WordPress sites. Adds security and hardening features and cleans up some default functionality.",
+    "description": "Constructor classes to easily register post types and related functions in a theme or plugin",
     "type": "library",
     "license": "GPL-2.0-or-later",
     "authors": [
