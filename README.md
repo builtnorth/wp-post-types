@@ -2,15 +2,6 @@
 
 Composer package for WordPress with a utility class that simplifies the process of creating and managing custom post types with extended functionality. It provides an easy-to-use interface for setting up custom post types, taxonomies, meta fields, and admin columns.
 
-## Requirements
-
--   PHP >= 8.1
--   WordPress >= 6.4
-
-## Installation
-
-This library is meant to be dropped into a theme or plugin via composer: `composer require builtnorth/wp-post-types`
-
 ## Features
 
 -   **Custom Post Type Creation**: Easily create custom post types with a wide range of configurable options.
@@ -21,6 +12,15 @@ This library is meant to be dropped into a theme or plugin via composer: `compos
 -   **Custom Title Placeholder**: Set a custom placeholder text for the title field.
 -   **Pagination Control**: Set custom pagination for archive pages of your post type.
 -   **Legacy Meta Box Removal**: Option to remove the default custom fields meta box.
+
+## Requirements
+
+-   PHP >= 8.1
+-   WordPress >= 6.4
+
+## Installation
+
+This library is meant to be dropped into a theme or plugin via composer: `composer require builtnorth/wp-post-types`
 
 ## Usage
 
