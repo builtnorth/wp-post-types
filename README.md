@@ -1,6 +1,6 @@
 # WP Post Types
 
-Composer package containing constructor classes to easily register post types and related functions in a theme or plugin.
+Composer package for WordPress with a utility class that simplifies the process of creating and managing custom post types with extended functionality. It provides an easy-to-use interface for setting up custom post types, taxonomies, meta fields, and admin columns.
 
 ## Requirements
 
@@ -13,96 +13,69 @@ This library is meant to be dropped into a theme or plugin via composer: `compos
 
 ## Features
 
-Contains a number of features that streamline the process of creating custom post types. It is reccomended to register a class for each of your post types to streamline registration of all features, but that is not neccessary.
+-   **Custom Post Type Creation**: Easily create custom post types with a wide range of configurable options.
+-   **Custom Taxonomy Support**: Add custom taxonomies to your post types.
+-   **Custom Meta Fields**: Define and manage custom meta fields for your post types.
+-   **Admin Columns**: Customize the columns displayed in the WordPress admin area for your post types.
+-   **Featured Image Column**: Optionally display a featured image column in the admin list view.
+-   **Custom Title Placeholder**: Set a custom placeholder text for the title field.
+-   **Pagination Control**: Set custom pagination for archive pages of your post type.
+-   **Legacy Meta Box Removal**: Option to remove the default custom fields meta box.
 
-Note that features should be registered on the `init` hook at a priority less than `10`. Or if you are using the package in a plugin, the `plugins_loaded` hook also works.
+## Usage
 
--   Post Type Registration
--   Taxonmy Registration
--   Post Meta Registration
--   Admin Columns Setup
-
-### Post Type Registration
-
-```
-if (class_exists('BuiltNorth\PostTypesConstructor\PostType')) {
-	new \BuiltNorth\PostTypesConstructor\PostType(
-		prefix: 'your_prefix_',
-		name: 'example',
-		slug: 'example',
-		archive: 'examples',
-		singular: 'Example',
-		plural: 'Examples',
-		args: [
-			'menu_icon' => 'dashicons-index-card',
-			'supports' => [
-				'editor', 'title', 'thumbnail', 'page-attributes', 'custom-fields'
-			],
-			'hierarchical' => false,
-		]
-	);
-}
-```
-
-### Taxonomy Registration
+Here's a basic example of how to use PostTypeExtended:
 
 ```
-if (class_exists('BuiltNorth\PostTypesConstructor\Taxonomy')) {
-	new \BuiltNorth\PostTypesConstructor\Taxonomy(
-		prefix: 'your_prefix_',
-		name: 'type',
-		slug: 'types',
-		singular: 'Type',
-		plural: 'Types',
-		post_type_name: 'example',
-		args: [
-			'hierarchical' => true,
-		]
-	);
-}
+use BuiltNorth\PostTypesConstructor\PostTypeExtended;
+
+new PostTypeExtended([
+    'post_type' => [
+        'prefix' => 'my_',
+        'name' => 'example_one',
+        'show_featured_image' => true,
+        'args' => [
+            'menu_icon' => 'dashicons-admin-post',
+            'supports' => ['title', 'editor', 'thumbnail'],
+        ]
+    ],
+    'taxonomies' => [
+        [
+			'prefix' => 'my_',
+            'name' => 'custom_category',
+            'args' => [
+                'hierarchical' => true,
+            ]
+        ]
+    ],
+    'post_meta' => [
+        [
+            'name' => 'custom_field',
+            'type' => 'string',
+            'description' => 'A custom meta field',
+        ],
+    ],
+    'admin_columns' => [
+        [
+            'name' => 'custom_field',
+            'label' => 'Custom Field',
+        ],
+    ],
+    'title_text' => 'Enter Custom Examlple Title Here',
+    'pagination' => 10,
+    'remove_meta_box' => true,
+]);
 ```
 
-### Post Meta Registration
+## Configuration Options
 
-```
-if (class_exists('BuiltNorth\PostTypesConstructor\PostMeta')) {
-	new \BuiltNorth\PostTypesConstructor\PostMeta(
-		prefix: 'your_prefix_',
-		post_type_name: 'example',
-		meta: [
-			'sample_text' => [
-				'type' => 'string'
-			],
-			'sample_boolean' => [
-				'type' => 'boolean',
-				'default' => false
-			],
-			'sample_integer' => [
-				'type' => 'integer',
-				'sanitize_callback' => 'absint'
-			]
-		]
-	);
-}
-```
-
-### Admin Columns Setup
-
-```
-if (class_exists('BuiltNorth\PostTypesConstructor\AdminColumns')) {
-	new \BuiltNorth\PostTypesConstructor\AdminColumns(
-		prefix: 'your_prefix_',
-		post_type_name: 'example',
-		columns: [
-			'sample_text' => [
-				'label' => __('Sample Text', 'your-text-domain'),
-				'meta_key' => 'your_prefix_example_sample_text',
-				'width' => '15%',
-			],
-		]
-	);
-}
-```
+-   post_type: Define the custom post type settings.
+-   taxonomies: Array of custom taxonomies to be associated with the post type.
+-   post_meta: Array of custom meta fields for the post type.
+-   admin_columns: Customize the admin columns for the post type.
+-   title_text: Set a custom placeholder for the title field.
+-   pagination: Set the number of items per page in archive views.
+-   remove_meta_box: Remove the default custom fields meta box if set to true.
 
 ## Disclaimer
 
