@@ -10,7 +10,7 @@ use BuiltNorth\PostTypesConstructor\AdminColumns;
 class PostTypeExtended
 {
 	protected $post_type;
-	protected $taxonomy;
+	protected $taxonomies;
 	protected $post_meta;
 	protected $admin_columns;
 	protected $title_text;
@@ -20,7 +20,7 @@ class PostTypeExtended
 	public function __construct(array $args = [])
 	{
 		$this->post_type = $args['post_type'] ?? [];
-		$this->taxonomy = $args['taxonomy'] ?? [];
+		$this->taxonomies = $args['taxonomies'] ?? [];
 		$this->post_meta = $args['post_meta'] ?? [];
 		$this->admin_columns = $args['admin_columns'] ?? [];
 		$this->title_text = $args['title_text'] ?? null;
@@ -56,12 +56,15 @@ class PostTypeExtended
 		}
 
 		$name = $this->post_type['name'];
+
+		$formatted_name = str_replace(['-', '_'], ' ', $name);
+
 		$default_args = [
 			'prefix' => '',
 			'slug' => $name,
 			'archive' => $name . 's',
-			'singular' => ucfirst($name),
-			'plural' => ucfirst($name) . 's',
+			'singular' => ucwords($formatted_name),
+			'plural' => ucwords($formatted_name) . 's',
 			'args' => []
 		];
 
@@ -80,30 +83,38 @@ class PostTypeExtended
 
 	public function register_taxonomy()
 	{
-		if (empty($this->taxonomy)) return;
+		if (empty($this->taxonomies)) return;
 
 		$post_type_name = $this->post_type['name'] ?? '';
-		$default_args = [
-			'prefix' => $this->post_type['prefix'] ?? '',
-			'name' => $post_type_name . '_category',
-			'slug' => $post_type_name . '_category',
-			'singular' => ucfirst($post_type_name) . ' Category',
-			'plural' => ucfirst($post_type_name) . ' Categories',
-			'post_type_name' => $post_type_name,
-			'args' => []
-		];
 
-		$taxonomy_args = array_merge($default_args, $this->taxonomy);
+		foreach ($this->taxonomies as $taxonomy) {
+			$name = $taxonomy['name'] ?? '';
+			if (empty($name)) continue;
 
-		new Taxonomy(
-			prefix: $taxonomy_args['prefix'],
-			name: $taxonomy_args['name'],
-			slug: $taxonomy_args['slug'],
-			singular: $taxonomy_args['singular'],
-			plural: $taxonomy_args['plural'],
-			post_type_name: $taxonomy_args['post_type_name'],
-			args: $taxonomy_args['args']
-		);
+			$formatted_name = str_replace(['-', '_'], ' ', $name);
+
+			$default_args = [
+				'prefix' => $this->post_type['prefix'] ?? '',
+				'name' => $name,
+				'slug' => $name,
+				'singular' => ucwords($formatted_name),
+				'plural' => ucwords($formatted_name) . 's',
+				'post_type_name' => $post_type_name,
+				'args' => []
+			];
+
+			$taxonomy_args = array_merge($default_args, $taxonomy);
+
+			new Taxonomy(
+				prefix: $taxonomy_args['prefix'],
+				name: $taxonomy_args['name'],
+				slug: $taxonomy_args['slug'],
+				singular: $taxonomy_args['singular'],
+				plural: $taxonomy_args['plural'],
+				post_type_name: $taxonomy_args['post_type_name'],
+				args: $taxonomy_args['args']
+			);
+		}
 	}
 
 	public function register_post_meta()
@@ -143,7 +154,8 @@ class PostTypeExtended
 		new AdminColumns(
 			prefix: $this->post_type['prefix'] ?? '',
 			post_type_name: $this->post_type['name'] ?? '',
-			columns: $columns_array
+			columns: $columns_array,
+			show_featured_image: $this->post_type['show_featured_image'] ?? false
 		);
 	}
 

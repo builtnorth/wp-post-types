@@ -31,6 +31,9 @@ class AdminColumns
 	/** @var array The custom columns configuration. */
 	protected $columns;
 
+	/** @var bool Whether to show the featured image column. */
+	protected $show_featured_image;
+
 	/**
 	 * Constructor.
 	 *
@@ -41,10 +44,12 @@ class AdminColumns
 	public function __construct(
 		string $prefix,
 		string $post_type_name,
-		array $columns = []
+		array $columns = [],
+		bool $show_featured_image = false
 	) {
 		$this->prefix = sanitize_key($prefix);
 		$this->post_type_name = sanitize_key($post_type_name);
+		$this->show_featured_image = $show_featured_image;
 		$this->columns = $this->prepare_columns($columns);
 		$this->init();
 	}
@@ -89,19 +94,31 @@ class AdminColumns
 
 		foreach ($columns as $key => $value) {
 			if ($key === 'title') {
-				// Add the featured image column just before the title
-				$new_columns['featured_image'] = $this->columns['featured_image']['label'];
+				// Add the featured image column just before the title if enabled
+				if ($this->show_featured_image) {
+					$new_columns['featured_image'] = $this->columns['featured_image']['label'];
+				}
 				$new_columns[$key] = $value;
+
+				// Add custom columns after the title
 				foreach ($this->columns as $custom_key => $custom_column) {
 					if ($custom_key !== 'featured_image') {
 						$new_columns[$custom_key] = $custom_column['label'];
 					}
 				}
-			} elseif ($key !== 'date') {
+			} elseif ($key === 'date') {
+				// We'll add the date column at the end
+				continue;
+			} else {
 				$new_columns[$key] = $value;
 			}
 		}
-		$new_columns['date'] = $columns['date'];
+
+		// Add the date column at the end
+		if (isset($columns['date'])) {
+			$new_columns['date'] = $columns['date'];
+		}
+
 		return $new_columns;
 	}
 
@@ -113,7 +130,7 @@ class AdminColumns
 	 */
 	public function display_custom_columns($column_name, $post_id)
 	{
-		if ($column_name === 'featured_image') {
+		if ($column_name === 'featured_image' && $this->show_featured_image) {
 			echo get_the_post_thumbnail($post_id, array(50, 50));
 		} elseif (isset($this->columns[$column_name])) {
 			$column = $this->columns[$column_name];
