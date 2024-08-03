@@ -36,40 +36,40 @@ Now, let's create a sample post type called 'example_one'. Note the lowercase na
 
 ```
 new PostTypeExtended([
-    'post_type' => [
-        'prefix' => 'my_',
-        'name' => 'example_one',
-        'show_featured_image' => true,
-        'args' => [
-            'menu_icon' => 'dashicons-admin-post',
-            'supports' => ['title', 'editor', 'thumbnail'],
-        ]
-    ],
-    'taxonomies' => [
-        [
+	'post_type' => [
+		'prefix' => 'my_',
+		'name' => 'example_one',
+		'show_featured_image' => true,
+		'args' => [
+			'menu_icon' => 'dashicons-admin-post',
+			'supports' => ['title', 'editor', 'thumbnail'],
+		]
+	],
+	'taxonomies' => [
+		[
 			'prefix' => 'my_',
-            'name' => 'custom_category',
-            'args' => [
-                'hierarchical' => true,
-            ]
-        ]
-    ],
-    'post_meta' => [
-        [
-            'name' => 'custom_field',
-            'type' => 'string',
-            'description' => 'A custom meta field',
-        ],
-    ],
-    'admin_columns' => [
-        [
-            'name' => 'custom_field',
-            'label' => 'Custom Field',
-        ],
-    ],
-    'title_text' => 'Enter Custom Examlple Title Here',
-    'pagination' => 10,
-    'remove_meta_box' => true,
+			'name' => 'custom_category',
+			'args' => [
+				'hierarchical' => true,
+			]
+		]
+	],
+	'post_meta' => [
+		[
+			'name' => 'custom_field',
+			'type' => 'string',
+			'description' => 'A custom meta field',
+		],
+	],
+	'admin_columns' => [
+		[
+			'name' => 'custom_field',
+			'label' => 'Custom Field',
+		],
+	],
+	'title_text' => 'Enter Custom Examlple Title Here',
+	'pagination' => 10,
+	'remove_meta_box' => true,
 ]);
 ```
 
@@ -167,7 +167,3 @@ Use of this library is at your own risk. The authors and contributors of this pr
 While we strive to keep this library up-to-date and secure, we make no guarantees about its performance, reliability, or suitability for any particular purpose. Users are advised to thoroughly test the library in a safe environment before deploying it to a live site.
 
 By using this library, you acknowledge that you have read this disclaimer and agree to its terms.
-
-```
-
-```
