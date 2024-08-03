@@ -89,31 +89,46 @@ class AdminColumns
 	 * @param array $columns The existing columns.
 	 * @return array The modified columns.
 	 */
+	/**
+	 * Add new columns.
+	 *
+	 * @param array $columns The existing columns.
+	 * @return array The modified columns.
+	 */
 	public function add_custom_columns($columns)
 	{
 		$new_columns = array();
 
-		if ($this->show_featured_image) {
-			$new_columns['featured_image'] = $this->columns['featured_image']['label'];
-		}
-
 		foreach ($columns as $key => $value) {
-			if ($key === 'title') {
-				// Add the featured image column just before the title
-				if ($key !== 'featured_image' || $this->show_featured_image) {
-					$columns[$key] = $column['label'];
-				}
+			if ($key === 'cb') {
+				// Always keep the checkbox first
 				$new_columns[$key] = $value;
+
+				// Add the featured image column right after the checkbox
+				if ($this->show_featured_image) {
+					$new_columns['featured_image'] = $this->columns['featured_image']['label'];
+				}
+			} elseif ($key === 'title') {
+				// Add the title column
+				$new_columns[$key] = $value;
+
+				// Add other custom columns after the title
 				foreach ($this->columns as $custom_key => $custom_column) {
 					if ($custom_key !== 'featured_image') {
 						$new_columns[$custom_key] = $custom_column['label'];
 					}
 				}
 			} elseif ($key !== 'date') {
+				// Add all other columns except date
 				$new_columns[$key] = $value;
 			}
 		}
-		$new_columns['date'] = $columns['date'];
+
+		// Add the date column at the end
+		if (isset($columns['date'])) {
+			$new_columns['date'] = $columns['date'];
+		}
+
 		return $new_columns;
 	}
 
