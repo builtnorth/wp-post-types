@@ -9,70 +9,58 @@ use BuiltNorth\PostTypesConstructor\AdminColumns;
 
 class PostTypeExtended
 {
-	protected $post_type;
-	protected $taxonomies;
-	protected $post_meta;
-	protected $admin_columns;
-	protected $title_text;
-	protected $pagination;
-	protected $remove_meta_box;
+	protected $config;
 
 	public function __construct(array $args = [])
 	{
-		$this->post_type = $args['post_type'] ?? [];
-		$this->taxonomies = $args['taxonomies'] ?? [];
-		$this->post_meta = $args['post_meta'] ?? [];
-		$this->admin_columns = $args['admin_columns'] ?? [];
-		$this->title_text = $args['title_text'] ?? null;
-		$this->pagination = $args['pagination'] ?? null;
-		$this->remove_meta_box = $args['remove_meta_box'] ?? false;
-
+		$this->config = $args;
 		add_action('init', [$this, 'init'], 2);
 	}
 
 	public function init()
 	{
-		$this->register_post_type();
+		$this->setup_post_type();
 		$this->register_taxonomy();
 		$this->register_post_meta();
 		$this->setup_admin_columns();
-
-		if ($this->title_text) {
-			add_filter('enter_title_here', [$this, 'change_title_text'], 10, 2);
-		}
-		if ($this->pagination) {
-			add_action('pre_get_posts', [$this, 'pagination_fix']);
-		}
-		if ($this->remove_meta_box) {
-			add_action('admin_menu', [$this, 'remove_legacy_meta_box']);
-		}
+		$this->setup_additional_features();
 	}
 
-	public function register_post_type()
+	protected function setup_post_type()
 	{
-		if (empty($this->post_type['name'])) {
+		$post_type = $this->config['post_type'] ?? [];
+		$name = $post_type['name'] ?? '';
+
+		if (empty($name)) {
 			error_log('PostTypeExtended: Post type name is required.');
 			return;
 		}
 
-		$name = $this->post_type['name'];
+		if (post_type_exists($name)) {
+			add_filter('register_post_type_args', [$this, 'modify_existing_post_type'], 10, 2);
+		} else {
+			$this->register_new_post_type($post_type);
+		}
+	}
 
-		$formatted_name = str_replace(['-', '_'], ' ', $name);
+	protected function register_new_post_type($post_type)
+	{
+		$formatted_name = str_replace(['-', '_'], ' ', $post_type['name']);
 
 		$default_args = [
 			'prefix' => '',
-			'slug' => $name,
-			'archive' => $name . 's',
+			'slug' => $post_type['name'],
+			'archive' => $post_type['name'] . 's',
 			'singular' => ucwords($formatted_name),
 			'plural' => ucwords($formatted_name) . 's',
 			'args' => []
 		];
 
-		$post_type_args = array_merge($default_args, $this->post_type);
+		$post_type_args = array_merge($default_args, $post_type);
 
 		new PostType(
 			prefix: $post_type_args['prefix'],
-			name: $name,
+			name: $post_type_args['name'],
 			slug: $post_type_args['slug'],
 			archive: $post_type_args['archive'],
 			singular: $post_type_args['singular'],
@@ -81,20 +69,28 @@ class PostTypeExtended
 		);
 	}
 
-	public function register_taxonomy()
+	public function modify_existing_post_type($args, $post_type)
 	{
-		if (empty($this->taxonomies)) return;
+		if ($post_type === $this->config['post_type']['name']) {
+			$new_args = $this->config['post_type']['args'] ?? [];
+			$args = wp_parse_args($new_args, $args);
+		}
+		return $args;
+	}
 
-		$post_type_name = $this->post_type['name'] ?? '';
+	protected function register_taxonomy()
+	{
+		$taxonomies = $this->config['taxonomies'] ?? [];
+		$post_type_name = $this->config['post_type']['name'] ?? '';
 
-		foreach ($this->taxonomies as $taxonomy) {
+		foreach ($taxonomies as $taxonomy) {
 			$name = $taxonomy['name'] ?? '';
 			if (empty($name)) continue;
 
 			$formatted_name = str_replace(['-', '_'], ' ', $name);
 
 			$default_args = [
-				'prefix' => $this->post_type['prefix'] ?? '',
+				'prefix' => $this->config['post_type']['prefix'] ?? '',
 				'name' => $name,
 				'slug' => $name,
 				'singular' => ucwords($formatted_name),
@@ -117,12 +113,13 @@ class PostTypeExtended
 		}
 	}
 
-	public function register_post_meta()
+	protected function register_post_meta()
 	{
-		if (empty($this->post_meta)) return;
+		$post_meta = $this->config['post_meta'] ?? [];
+		if (empty($post_meta)) return;
 
 		$meta_array = [];
-		foreach ($this->post_meta as $meta) {
+		foreach ($post_meta as $meta) {
 			if (empty($meta['name'])) continue;
 			$meta_array[$meta['name']] = [
 				'type' => $meta['type'] ?? 'string',
@@ -132,50 +129,85 @@ class PostTypeExtended
 		}
 
 		new PostMeta(
-			prefix: $this->post_type['prefix'] ?? '',
-			post_type_name: $this->post_type['name'] ?? '',
+			prefix: $this->config['post_type']['prefix'] ?? '',
+			post_type_name: $this->config['post_type']['name'] ?? '',
 			meta: $meta_array
 		);
 	}
 
-	public function setup_admin_columns()
+	protected function setup_admin_columns()
 	{
-		if (empty($this->admin_columns)) return;
+		$admin_columns = $this->config['admin_columns'] ?? [];
+		$show_featured_image = $this->config['post_type']['show_featured_image'] ?? false;
 
 		$columns_array = [];
-		foreach ($this->admin_columns as $column) {
-			if (empty($column['name'])) continue;
-			$columns_array[$column['name']] = [
-				'label' => $column['label'] ?? ucfirst(str_replace('_', ' ', $column['name'])),
-				'meta_key' => ($this->post_type['prefix'] ?? '') . ($this->post_type['name'] ?? '') . '_' . $column['name'],
+
+		// Only add featured image column if explicitly set to true
+		if ($show_featured_image === true) {
+			$columns_array['featured_image'] = [
+				'label' => 'Image',
+				'callback' => [$this, 'display_featured_image'],
+				'width' => '60px',
 			];
 		}
 
-		new AdminColumns(
-			prefix: $this->post_type['prefix'] ?? '',
-			post_type_name: $this->post_type['name'] ?? '',
-			columns: $columns_array,
-			show_featured_image: $this->post_type['show_featured_image'] ?? false
-		);
+		foreach ($admin_columns as $column) {
+			if (empty($column['name'])) continue;
+			$columns_array[$column['name']] = [
+				'label' => $column['label'] ?? ucfirst(str_replace('_', ' ', $column['name'])),
+				'meta_key' => ($this->config['post_type']['prefix'] ?? '') . ($this->config['post_type']['name'] ?? '') . '_' . $column['name'],
+				'width' => $column['width'] ?? null,
+			];
+		}
+
+		// Only create AdminColumns instance if there are columns to add
+		if (!empty($columns_array)) {
+			new AdminColumns(
+				prefix: $this->config['post_type']['prefix'] ?? '',
+				post_type_name: $this->config['post_type']['name'] ?? '',
+				columns: $columns_array,
+				show_featured_image: $this->config['post_type']['show_featured_image'] ?? false
+			);
+		}
+	}
+
+	public function display_featured_image($post_id)
+	{
+		echo get_the_post_thumbnail($post_id, [50, 50]);
+	}
+
+	protected function setup_additional_features()
+	{
+		if (isset($this->config['title_text'])) {
+			add_filter('enter_title_here', [$this, 'change_title_text'], 10, 2);
+		}
+
+		if (isset($this->config['pagination'])) {
+			add_action('pre_get_posts', [$this, 'pagination_fix']);
+		}
+
+		if ($this->config['remove_meta_box'] ?? false) {
+			add_action('admin_menu', [$this, 'remove_legacy_meta_box']);
+		}
 	}
 
 	public function change_title_text($title, $post)
 	{
-		if ($post->post_type === ($this->post_type['prefix'] ?? '') . ($this->post_type['name'] ?? '')) {
-			return $this->title_text;
+		if ($post->post_type === ($this->config['post_type']['prefix'] ?? '') . ($this->config['post_type']['name'] ?? '')) {
+			return $this->config['title_text'];
 		}
 		return $title;
 	}
 
 	public function pagination_fix($query)
 	{
-		if (!is_admin() && $query->is_main_query() && is_post_type_archive(($this->post_type['prefix'] ?? '') . ($this->post_type['name'] ?? ''))) {
-			$query->set('posts_per_page', $this->pagination);
+		if (!is_admin() && $query->is_main_query() && is_post_type_archive(($this->config['post_type']['prefix'] ?? '') . ($this->config['post_type']['name'] ?? ''))) {
+			$query->set('posts_per_page', $this->config['pagination']);
 		}
 	}
 
 	public function remove_legacy_meta_box()
 	{
-		remove_meta_box('postcustom', ($this->post_type['prefix'] ?? '') . ($this->post_type['name'] ?? ''), 'normal');
+		remove_meta_box('postcustom', ($this->config['post_type']['prefix'] ?? '') . ($this->config['post_type']['name'] ?? ''), 'normal');
 	}
 }

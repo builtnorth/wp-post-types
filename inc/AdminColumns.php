@@ -31,7 +31,7 @@ class AdminColumns
 	/** @var array The custom columns configuration. */
 	protected $columns;
 
-	/** @var bool Whether to show the featured image column. */
+	/** @var bool Show featured image in admin columns. */
 	protected $show_featured_image;
 
 	/**
@@ -82,6 +82,7 @@ class AdminColumns
 		add_action('admin_head', [$this, 'inline_column_styles']);
 	}
 
+
 	/**
 	 * Add new columns.
 	 *
@@ -92,35 +93,30 @@ class AdminColumns
 	{
 		$new_columns = array();
 
+		if ($this->show_featured_image) {
+			$new_columns['featured_image'] = $this->columns['featured_image']['label'];
+		}
+
 		foreach ($columns as $key => $value) {
 			if ($key === 'title') {
-				// Add the featured image column just before the title if enabled
-				if ($this->show_featured_image) {
-					$new_columns['featured_image'] = $this->columns['featured_image']['label'];
+				// Add the featured image column just before the title
+				if ($key !== 'featured_image' || $this->show_featured_image) {
+					$columns[$key] = $column['label'];
 				}
 				$new_columns[$key] = $value;
-
-				// Add custom columns after the title
 				foreach ($this->columns as $custom_key => $custom_column) {
 					if ($custom_key !== 'featured_image') {
 						$new_columns[$custom_key] = $custom_column['label'];
 					}
 				}
-			} elseif ($key === 'date') {
-				// We'll add the date column at the end
-				continue;
-			} else {
+			} elseif ($key !== 'date') {
 				$new_columns[$key] = $value;
 			}
 		}
-
-		// Add the date column at the end
-		if (isset($columns['date'])) {
-			$new_columns['date'] = $columns['date'];
-		}
-
+		$new_columns['date'] = $columns['date'];
 		return $new_columns;
 	}
+
 
 	/**
 	 * Display the custom columns.
@@ -130,11 +126,12 @@ class AdminColumns
 	 */
 	public function display_custom_columns($column_name, $post_id)
 	{
-		if ($column_name === 'featured_image' && $this->show_featured_image) {
-			echo get_the_post_thumbnail($post_id, array(50, 50));
-		} elseif (isset($this->columns[$column_name])) {
+		if (isset($this->columns[$column_name])) {
 			$column = $this->columns[$column_name];
-			if (isset($column['callback']) && is_callable($column['callback'])) {
+
+			if ($column_name === 'featured_image' && $this->show_featured_image) {
+				echo get_the_post_thumbnail($post_id, array(50, 50));
+			} elseif (isset($column['callback']) && is_callable($column['callback'])) {
 				call_user_func($column['callback'], $post_id);
 			} elseif (isset($column['meta_key'])) {
 				$value = get_post_meta($post_id, $column['meta_key'], true);
@@ -142,6 +139,7 @@ class AdminColumns
 			}
 		}
 	}
+
 
 	/**
 	 * Admin styles.
