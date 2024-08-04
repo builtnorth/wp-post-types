@@ -106,6 +106,7 @@ new PostTypeExtended([
         -   `publicly_queryable`: (boolean) Whether queries can be performed on the front end.
         -   `show_ui`: (boolean) Whether to generate a default UI for managing this post type.
         -   `show_in_menu`: (boolean) Where to show the post type in the admin menu.
+        -   `show_in_rest`: (boolean)Expose to the Rest API or not.
         -   `menu_position`: (integer) The position in the menu order the post type should appear.
         -   `menu_icon`: (string) The URL to the icon to be used for this menu.
         -   `capability_type`: (string) The string to use to build the read, edit, and delete capabilities.
