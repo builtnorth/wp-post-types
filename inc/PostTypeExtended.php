@@ -37,7 +37,7 @@ class PostTypeExtended
 		}
 
 		if (post_type_exists($name)) {
-			add_filter('register_post_type_args', [$this, 'modify_existing_post_type'], 10, 2);
+			$this->modify_existing_post_type();
 		} else {
 			$this->register_new_post_type($post_type);
 		}
@@ -69,13 +69,22 @@ class PostTypeExtended
 		);
 	}
 
-	public function modify_existing_post_type($args, $post_type)
+	protected function modify_existing_post_type()
 	{
-		if ($post_type === $this->config['post_type']['name']) {
-			$new_args = $this->config['post_type']['args'] ?? [];
-			$args = wp_parse_args($new_args, $args);
+		$post_type_name = $this->config['post_type']['name'];
+		$new_args = $this->config['post_type']['args'] ?? [];
+
+		if (!empty($new_args)) {
+			add_action('init', function () use ($post_type_name, $new_args) {
+				global $wp_post_types;
+				if (isset($wp_post_types[$post_type_name])) {
+					$args = &$wp_post_types[$post_type_name];
+					foreach ($new_args as $key => $value) {
+						$args->$key = $value;
+					}
+				}
+			}, 99);  // High priority to run after the post type is registered
 		}
-		return $args;
 	}
 
 	protected function register_taxonomy()
