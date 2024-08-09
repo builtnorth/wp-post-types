@@ -24,7 +24,7 @@ This library is meant to be dropped into a theme or plugin via composer: `compos
 
 ## Usage
 
-Initiate the class somehwere in your plugin or theme with one of the following depenfing on the method you chosse. There are two ways to register post types and related. Feel free to use whichever you prefer:
+Initiate the class somehwere in your plugin or theme with one of the following depenfing on the method you choose. There are two ways to register post types and related. Feel free to use whichever you prefer:
 
 ```php
 use BuiltNorth\PostTypesConstructor\PostTypeExtended;
@@ -46,10 +46,36 @@ if (class_exists(PostTypeExtended::class)) {
 }
 ```
 
-1. The standard way is to add a post-type.config.json file to the root of your plugin or theme. If the file is found, the post type information wil lautomatically be registered.
-2. The alternate way is to initiate the `new PostTypeExtended([])` class.
+1. The standard way is to add a post-type.config.json file to the root of your plugin or theme.
+2. The alternate way is to initiate configure via php.
 
-Below we will take a look at both. In the examples, both methods are registering the exact same items. The examples also try and demonstrate the full capabilitie of the library.
+Minimal post type registration via JSON:
+
+```json
+{
+    "post_types": {
+        "sample": {
+            "name": "prefix_sample",
+		]
+	]
+}
+```
+
+Minimal post type registration via PHP:
+
+```php
+$config = [
+	[
+		'post_types' => [
+			'sample' => [
+				'name' => 'prefix_sample',
+			]
+		]
+	]
+]
+```
+
+Below we will take a look at more advanced examples. In the examples, both methods are registering the exact same items. The examples also try and demonstrate the full capabilitie of the library.
 
 Here is what's happening in the examples:
 
@@ -70,7 +96,7 @@ Here is what's happening in the examples:
 
 ### Usage Method 1 (JSON Registration)
 
-Make sure you have a post-type.config.json file at the root of your plugin or theme. Within the file use the following format for registration. That's it, you should have post types with setttings.
+Make sure you have a post-type.config.json file at the root of your plugin or theme. Within the file use the following format for registration.
 
 ```json
 {
@@ -142,9 +168,7 @@ Make sure you have a post-type.config.json file at the root of your plugin or th
 Somewhere in a file such as functions.php, add the follwing. Once added, you should have post types with settings.
 
 ```php
-if (class_exists('BuiltNorth\PostTypesConstructor\PostType')) {
-
-	new \BuiltNorth\PostTypesConstructor\PostTypeExtended(
+	$config = [
 		[
 			'post_types' => [
 				'sample' => [
@@ -207,9 +231,7 @@ if (class_exists('BuiltNorth\PostTypesConstructor\PostType')) {
 				]
 			]
 		]
-
-	);
-}
+];
 ```
 
 ## Configuration Options
