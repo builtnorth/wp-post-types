@@ -13,9 +13,18 @@ class AdminColumns
 		array $columns = [],
 		bool $show_featured_image = false
 	) {
-		$this->post_type_name   = sanitize_title_with_dashes($post_type_name);
+		$this->post_type_name = $post_type_name;
 		$this->show_featured_image = $show_featured_image;
 		$this->columns = $columns;
+
+		/**
+		 * Remove all default columns and actions for the post type.
+		 * 
+		 * @todo Figure out why this is necessary. If missing two images show.
+		 */
+		remove_all_filters("manage_{$this->post_type_name}_posts_columns");
+		remove_all_actions("manage_{$this->post_type_name}_posts_custom_column");
+
 		$this->init();
 	}
 
@@ -65,8 +74,14 @@ class AdminColumns
 		if ($column_name === 'featured_image' && $this->show_featured_image) {
 			$thumbnail_id = get_post_thumbnail_id($post_id);
 			if ($thumbnail_id) {
-				$thumbnail = wp_get_attachment_image($thumbnail_id, [50, 50]);
-				echo $thumbnail;
+				$image_attributes = wp_get_attachment_image_src($thumbnail_id, [50, 50]);
+				if ($image_attributes) {
+					echo '<!-- Start Custom Featured Image -->';
+					echo '<img src="' . esc_url($image_attributes[0]) . '" width="50" height="50" alt="" />';
+					echo '<!-- End Custom Featured Image -->';
+				} else {
+					echo '—';
+				}
 			} else {
 				echo '—';
 			}

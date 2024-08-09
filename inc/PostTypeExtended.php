@@ -9,35 +9,66 @@ use BuiltNorth\PostTypesConstructor\AdminColumns;
 
 class PostTypeExtended
 {
+	protected static $instance = null;
 	protected $config;
 	protected $postTypeMap = [];
 
-	public function __construct($config = [])
+	protected function __construct()
 	{
-		if (is_string($config) && file_exists($config)) {
-			$json_config = file_get_contents($config);
-			$this->config = json_decode($json_config, true);
-			if (json_last_error() !== JSON_ERROR_NONE) {
-				throw new \Exception('Invalid JSON configuration: ' . json_last_error_msg());
-			}
-		} elseif (is_array($config)) {
-			$this->config = $config;
-		} else {
-			throw new \InvalidArgumentException('Configuration must be either a valid JSON file path or an array.');
-		}
-
-		add_action('init', [$this, 'init'], 2);
+		// Delay loading config until WordPress is fully loaded
+		add_action('after_setup_theme', [$this, 'loadConfig']);
 	}
 
-	public function init()
+	public static function getInstance()
 	{
+		if (self::$instance === null) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
+
+	public static function init()
+	{
+		$instance = self::getInstance();
+		add_action('init', [$instance, 'initPostTypes']);
+	}
+
+	public function loadConfig()
+	{
+		$this->config = $this->findJSONConfig();
+		// Now that config is loaded, we can set up post types
+		$this->initPostTypes();
+	}
+
+	protected function findJSONConfig()
+	{
+		$possible_locations = [
+			get_stylesheet_directory() . '/post-type.config.json',
+			get_template_directory() . '/post-type.config.json',
+			WP_PLUGIN_DIR . '/post-type.config.json',
+		];
+
+		foreach ($possible_locations as $location) {
+			if (file_exists($location)) {
+				$json_config = file_get_contents($location);
+				return json_decode($json_config, true);
+			}
+		}
+
+		return []; // Return empty config if no file found
+	}
+
+	public function initPostTypes()
+	{
+		if (empty($this->config)) {
+			return; // No config loaded, nothing to do
+		}
 		$this->setup_post_types();
 		$this->register_taxonomies();
 		$this->register_post_meta();
 		$this->setup_admin_columns();
 		$this->setup_additional_features();
 	}
-
 	protected function setup_post_types()
 	{
 		$post_types = $this->config['post_types'] ?? [];
@@ -82,6 +113,7 @@ class PostTypeExtended
 			args: $post_type_args['args']
 		);
 	}
+
 	protected function modify_existing_post_type($post_type_name, $post_type_config)
 	{
 		if (!empty($post_type_config)) {
@@ -120,13 +152,10 @@ class PostTypeExtended
 							$post_type->$key = $value;
 						}
 					}
-
-					error_log("Modified labels for $post_type_name: " . print_r($post_type->labels, true));
 				}
 			}, 999);
 		}
 	}
-
 
 	protected function register_taxonomies()
 	{
@@ -259,18 +288,14 @@ class PostTypeExtended
 		}
 	}
 
+	public static function setConfig(array $config)
+	{
+		$instance = self::getInstance();
+		$instance->config = $config;
+	}
+
 	public function getRegisteredName($internal_key)
 	{
 		return $this->postTypeMap[$internal_key] ?? $internal_key;
-	}
-
-	public static function fromJSON($json_file)
-	{
-		return new self($json_file);
-	}
-
-	public static function fromArray($config_array)
-	{
-		return new self($config_array);
 	}
 }

@@ -24,10 +24,30 @@ This library is meant to be dropped into a theme or plugin via composer: `compos
 
 ## Usage
 
-There are two ways to register post types and related. Feel free to use whichever you prefer:
+Initiate the class somehwere in your plugin or theme with one of the following depenfing on the method you chosse. There are two ways to register post types and related. Feel free to use whichever you prefer:
+
+```php
+use BuiltNorth\PostTypesConstructor\PostTypeExtended;
+
+if (class_exists(PostTypeExtended::class)) {
+
+	// Use for JSON Config
+	add_action('after_setup_theme', function () {
+		PostTypeExtended::init();
+	});
+
+	// Use for PHP config
+	add_action('after_setup_theme', function() {
+	    $config = [
+	        // Your custom configuration here
+	    ];
+	    PostTypeExtended::setConfig($config);
+	}, 9);
+}
+```
 
 1. The standard way is to add a post-type.config.json file to the root of your plugin or theme. If the file is found, the post type information wil lautomatically be registered.
-2. The alternate way is to use the register via php with the `new PostTypeExtended([])` class.
+2. The alternate way is to initiate the `new PostTypeExtended([])` class.
 
 Below we will take a look at both. In the examples, both methods are registering the exact same items. The examples also try and demonstrate the full capabilitie of the library.
 
@@ -39,9 +59,14 @@ Here is what's happening in the examples:
 2. Next, modify the existing/standard `post` post type.
     - Update the singular name and plural names.
     - Change the menu icon.
-3. Register the taxonomy `example_category` (key)
+3. Next, register the taxonomy `example_category` (key)
     - Add the actual prefixed name of `prefix_example_category`.
-    -
+    - Change the plural name.
+    - Assign the taxonomy to `sample` and `post` post types.
+4. Then, register post meta for `sample`.
+5. Set up admin columns for the post meta that was registered.
+    - Also set the featured image for `posts` to display in the admin columns.
+6. Finally, add some extra settings to `sample` and `post`.
 
 ### Usage Method 1 (JSON Registration)
 
