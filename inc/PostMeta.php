@@ -13,7 +13,6 @@ namespace BuiltNorth\PostTypesConstructor;
 
 class PostMeta
 {
-	protected $prefix;
 	protected $post_type_name;
 	protected $meta;
 
@@ -25,11 +24,9 @@ class PostMeta
 	 * @param array  $meta      Custom meta fields for the post type.
 	 */
 	public function __construct(
-		string $prefix,
 		string $post_type_name,
 		array $meta = []
 	) {
-		$this->prefix = sanitize_title_with_dashes($prefix);
 		$this->post_type_name   = sanitize_title_with_dashes($post_type_name);
 		$this->meta      = $meta;
 
@@ -47,14 +44,19 @@ class PostMeta
 	 */
 	public function register_post_meta()
 	{
-		$full_post_type_post_type_name = $this->prefix . $this->post_type_name;
-
 		foreach ($this->meta as $field => $config) {
+			// error_log('Registering meta for post type: ' . $this->post_type_name);
+			// error_log('Meta config: ' . print_r($this->meta, true));
 			$args = [
 				'show_in_rest' => true,
 				'single' => true,
-				'type' => $config['type'] ?? 'string',
+				'type' => $config['type'],
+				'description' => $config['description'],
 			];
+
+			if (isset($config['default'])) {
+				$args['default'] = $config['default'];
+			}
 
 			if (isset($config['sanitize_callback'])) {
 				$args['sanitize_callback'] = $config['sanitize_callback'];
@@ -62,11 +64,7 @@ class PostMeta
 				$args['sanitize_callback'] = $this->get_default_sanitize_callback($args['type']);
 			}
 
-			if (isset($config['default'])) {
-				$args['default'] = $config['default'];
-			}
-
-			register_post_meta($full_post_type_post_type_name, $full_post_type_post_type_name . '_' . $field, $args);
+			register_post_meta($this->post_type_name, $this->post_type_name . '_' . $field, $args);
 		}
 	}
 

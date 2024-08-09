@@ -24,69 +24,167 @@ This library is meant to be dropped into a theme or plugin via composer: `compos
 
 ## Usage
 
-Here's a basic example of how to use PostTypeExtended:
+There are two ways to register post types and related. Feel free to use whichever you prefer:
 
-Be sure to call the following at the top of any file that you use the PostTypeExtended class:
+1. The standard way is to add a post-type.config.json file to the root of your plugin or theme. If the file is found, the post type information wil lautomatically be registered.
+2. The alternate way is to use the register via php with the `new PostTypeExtended([])` class.
 
+Below we will take a look at both. In the examples, both methods are registering the exact same items. The examples also try and demonstrate the full capabilitie of the library.
+
+Here is what's happening in the examples:
+
+1. First, register a post type called `sample`.
+    - `sample` is used only as a key though, as for best practices the actual post type name is `prefix_sample`. The prefix is not required, but reccomended.
+    - We are setting the menu icon and supports.
+2. Next, modify the existing/standard `post` post type.
+    - Update the singular name and plural names.
+    - Change the menu icon.
+3. Register the taxonomy `example_category` (key)
+    - Add the actual prefixed name of `prefix_example_category`.
+    -
+
+### Usage Method 1 (JSON Registration)
+
+Make sure you have a post-type.config.json file at the root of your plugin or theme. Within the file use the following format for registration. That's it, you should have post types with setttings.
+
+```json
+{
+    "post_types": {
+        "sample": {
+            "name": "prefix_sample",
+            "args": {
+                "menu_icon": "dashicons-paperclip",
+                "supports": ["title", "editor", "thumbnail", "custom-fields"]
+            }
+        },
+        "post": {
+            "name": "post",
+            "singular": "Article",
+            "plural": "News",
+            "args": {
+                "menu_icon": "dashicons-megaphone"
+            }
+        }
+    },
+    "taxonomies": {
+        "example_category": {
+            "name": "prefix_example_category",
+            "plural": "Example Categories",
+            "post_types": ["sample", "post"],
+            "args": {
+                "hierarchical": false
+            }
+        }
+    },
+    "post_meta": {
+        "sample": {
+            "meta": {
+                "name": "custom_field",
+                "type": "string",
+                "description": "A custom meta field"
+            }
+        }
+    },
+    "admin_columns": {
+        "sample": {
+            "show_featured_image": true,
+            "columns": [
+                {
+                    "name": "custom_field",
+                    "label": "Custom Field"
+                }
+            ]
+        },
+        "post": {
+            "show_featured_image": true
+        }
+    },
+    "extras": {
+        "sample": {
+            "title_text": "Enter Sample Post Title Here",
+            "pagination": 9
+        },
+        "post": {
+            "title_text": "Enter News Article Title Here",
+            "pagination": 12
+        }
+    }
+}
 ```
-use BuiltNorth\PostTypesConstructor\PostTypeExtended;
-```
 
-Now, let's create a sample post type called 'example_one'. Note the lowercase name and use of underscores. It will be converted to `Example One` where expected. There is also options to define all default args as well, so you could set the plural setting to `Our Examples`, `Examples`, etc.
+### Usage Method 2 (PHP Registration)
 
-```
-new PostTypeExtended([
-	'post_type' => [
-		'prefix' => 'my_',
-		'name' => 'example_one',
-		'show_featured_image' => true,
-		'args' => [
-			'menu_icon' => 'dashicons-admin-post',
-			'supports' => ['title', 'editor', 'thumbnail'],
-		]
-	],
-	'taxonomies' => [
+Somewhere in a file such as functions.php, add the follwing. Once added, you should have post types with settings.
+
+```php
+if (class_exists('BuiltNorth\PostTypesConstructor\PostType')) {
+
+	new \BuiltNorth\PostTypesConstructor\PostTypeExtended(
 		[
-			'prefix' => 'my_',
-			'name' => 'custom_category',
-			'args' => [
-				'hierarchical' => true,
+			'post_types' => [
+				'sample' => [
+					'name' => 'prefix_sample',
+					'args' => [
+						'menu_icon' => 'dashicons-paperclip',
+						'supports' => ['title', 'editor', 'thumbnail', 'custom-fields']
+					]
+				],
+				'post' => [
+					'name' => 'post',
+					'singular' => 'Article',
+					'plural' => 'News',
+					'args' => [
+						'menu_icon' => 'dashicons-megaphone'
+					]
+				]
+			],
+			'taxonomies' => [
+				'example_category' => [
+					'name' => 'prefix_example_category',
+					'plural' => 'Example Categories',
+					'post_types' => ['sample', 'post'],
+					'args' => [
+						'hierarchical' => false
+					]
+				]
+			],
+			'post_meta' => [
+				'sample' => [
+					'meta' => [
+						'name' => 'custom_field',
+						'type' => 'string',
+						'description' => 'A custom meta field'
+					]
+				]
+			],
+			'admin_columns' => [
+				'sample' => [
+					'show_featured_image' => true,
+					'columns' => [
+						[
+							'name' => 'custom_field',
+							'label' => 'Custom Field'
+						]
+					]
+				],
+				'post' => [
+					'show_featured_image' => true
+				]
+			],
+			'extras' => [
+				'sample' => [
+					'title_text' => 'Enter Sample Post Title Here',
+					'pagination' => 9
+				],
+				'post' => [
+					'title_text' => 'Enter News Article Title Here',
+					'pagination' => 12
+				]
 			]
 		]
-	],
-	'post_meta' => [
-		[
-			'name' => 'custom_field',
-			'type' => 'string',
-			'description' => 'A custom meta field',
-		],
-	],
-	'admin_columns' => [
-		[
-			'name' => 'custom_field',
-			'label' => 'Custom Field',
-		],
-	],
-	'title_text' => 'Enter Custom Examlple Title Here',
-	'pagination' => 10,
-	'remove_meta_box' => true,
-]);
-```
 
-Additionally, existing post types can be extended with options as well. For example if you want to add a custom taxonomy to posts and show the featured image in the admin columns:
-
-```
-new PostTypeExtended([
-	'post_type' => [
-		'name' => 'post',
-		'show_featured_image' => true,
-	],
-	'taxonomies' => [
-		[
-			'name' => 'custom_taxonomy',
-		]
-	],
-]);
+	);
+}
 ```
 
 ## Configuration Options
@@ -145,7 +243,6 @@ new PostTypeExtended([
     -   `name`: (string) The name of the column.
     -   `label`: (string) The label for the column header.
     -   `meta_key`: (string) The meta key to display (for custom fields).
-    -   `callback`: (callable) A custom callback function to display column content.
     -   `width`: (string) The width of the column (e.g., '100px').
 
 ### Additional Settings
