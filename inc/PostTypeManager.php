@@ -7,68 +7,78 @@ use BuiltNorth\PostTypesConstructor\Taxonomy;
 use BuiltNorth\PostTypesConstructor\PostMeta;
 use BuiltNorth\PostTypesConstructor\AdminColumns;
 
-class PostTypeExtended
+class PostTypeManager
 {
-	protected static $instance = null;
-	protected $config;
+	protected $config = [];
 	protected $postTypeMap = [];
 
-	protected function __construct()
+	public function __construct($config = null)
 	{
-		// Delay loading config until WordPress is fully loaded
-		add_action('after_setup_theme', [$this, 'loadConfig']);
+		$this->loadConfig($config);
 	}
 
-	public static function getInstance()
+	protected function loadConfig($config)
 	{
-		if (self::$instance === null) {
-			self::$instance = new self();
+		if (is_string($config) && file_exists($config)) {
+			// Load JSON configuration
+			$this->loadJsonConfig($config);
+		} elseif (is_array($config)) {
+			// Use PHP array configuration
+			$this->config = $config;
+		} else {
+			// Try to find default JSON configuration
+			$default_config = $this->findDefaultConfig();
+			if ($default_config) {
+				$this->loadJsonConfig($default_config);
+			}
 		}
-		return self::$instance;
 	}
 
-	public static function init()
+	protected function loadJsonConfig($file_path)
 	{
-		$instance = self::getInstance();
-		add_action('init', [$instance, 'initPostTypes']);
+		$json_config = file_get_contents($file_path);
+		$this->config = json_decode($json_config, true);
+		if (json_last_error() !== JSON_ERROR_NONE) {
+			throw new \Exception('Invalid JSON configuration: ' . json_last_error_msg());
+		}
 	}
 
-	public function loadConfig()
-	{
-		$this->config = $this->findJSONConfig();
-		// Now that config is loaded, we can set up post types
-		$this->initPostTypes();
-	}
-
-	protected function findJSONConfig()
+	protected function findDefaultConfig()
 	{
 		$possible_locations = [
 			get_stylesheet_directory() . '/post-type.config.json',
 			get_template_directory() . '/post-type.config.json',
-			WP_PLUGIN_DIR . '/post-type.config.json',
+			__DIR__ . '/post-type.config.json',
 		];
 
 		foreach ($possible_locations as $location) {
 			if (file_exists($location)) {
-				$json_config = file_get_contents($location);
-				return json_decode($json_config, true);
+				return $location;
 			}
 		}
 
-		return []; // Return empty config if no file found
+		return null;
 	}
 
-	public function initPostTypes()
+	public function mergeConfig(array $override_config)
+	{
+		$this->config = array_replace_recursive($this->config, $override_config);
+	}
+
+	public function init()
 	{
 		if (empty($this->config)) {
-			return; // No config loaded, nothing to do
+			//throw new \Exception('No configuration loaded. Cannot initialize.');
 		}
+
 		$this->setup_post_types();
 		$this->register_taxonomies();
 		$this->register_post_meta();
 		$this->setup_admin_columns();
 		$this->setup_additional_features();
 	}
+
+
 	protected function setup_post_types()
 	{
 		$post_types = $this->config['post_types'] ?? [];
@@ -76,7 +86,7 @@ class PostTypeExtended
 		foreach ($post_types as $internal_key => $post_type) {
 			$name = $post_type['name'] ?? '';
 			if (empty($name)) {
-				error_log("PostTypeExtended: Post type name is required for key '{$internal_key}'.");
+				error_log("PostTypeManager: Post type name is required for key '{$internal_key}'.");
 				continue;
 			}
 
@@ -169,7 +179,7 @@ class PostTypeExtended
 	{
 		$name = $taxonomy['name'] ?? '';
 		if (empty($name)) {
-			error_log("PostTypeExtended: Taxonomy name is required for key '{$internal_key}'.");
+			error_log("PostTypeManager: Taxonomy name is required for key '{$internal_key}'.");
 			return;
 		}
 
