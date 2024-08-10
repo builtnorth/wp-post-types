@@ -77,94 +77,26 @@ class PostTypeManager
 		$this->setup_admin_columns();
 		$this->setup_additional_features();
 	}
-
-
 	protected function setup_post_types()
 	{
 		$post_types = $this->config['post_types'] ?? [];
 
-		foreach ($post_types as $internal_key => $post_type) {
-			$name = $post_type['name'] ?? '';
-			if (empty($name)) {
-				error_log("PostTypeManager: Post type name is required for key '{$internal_key}'.");
-				continue;
-			}
+		foreach ($post_types as $key => $post_type_config) {
+			$name = $post_type_config['name'] ?? PostType::formatPostTypeName($key);
+			$this->postTypeMap[$key] = $name;
 
 			if (post_type_exists($name)) {
-				$this->modify_existing_post_type($name, $post_type);
+				PostType::modify_existing($name, $post_type_config);
 			} else {
-				$this->register_post_type($internal_key, $post_type);
+				$this->register_post_type($key, $post_type_config);
 			}
 		}
 	}
 
-	protected function register_post_type($internal_key, $post_type)
+	protected function register_post_type($key, $post_type_config)
 	{
-		$name = $post_type['name'];
-		$this->postTypeMap[$internal_key] = $name;
-
-		$formatted_name = str_replace(['-', '_'], ' ', $internal_key);
-		$default_args = [
-			'slug' => $internal_key,
-			'archive' => $internal_key . 's',
-			'singular' => $post_type['singular'] ?? ucwords($formatted_name),
-			'plural' => $post_type['plural'] ?? ucwords($formatted_name) . 's',
-			'args' => []
-		];
-
-		$post_type_args = array_merge($default_args, $post_type);
-
-		new PostType(
-			name: $name,
-			slug: $post_type_args['slug'],
-			archive: $post_type_args['archive'],
-			singular: $post_type_args['singular'],
-			plural: $post_type_args['plural'],
-			args: $post_type_args['args']
-		);
-	}
-
-	protected function modify_existing_post_type($post_type_name, $post_type_config)
-	{
-		if (!empty($post_type_config)) {
-			add_action('init', function () use ($post_type_name, $post_type_config) {
-				global $wp_post_types;
-
-				if (isset($wp_post_types[$post_type_name])) {
-					$post_type = &$wp_post_types[$post_type_name];
-
-					if (isset($post_type_config['singular'])) {
-						$singular = $post_type_config['singular'];
-						$post_type->labels->singular_name = $singular;
-						$post_type->labels->add_new = "Add New $singular";
-						$post_type->labels->add_new_item = "Add New $singular";
-						$post_type->labels->edit_item = "Edit $singular";
-						$post_type->labels->new_item = "New $singular";
-						$post_type->labels->view_item = "View $singular";
-						$post_type->labels->view_items = "View $singular";
-						$post_type->labels->name_admin_bar = $singular;
-					}
-
-					if (isset($post_type_config['plural'])) {
-						$plural = $post_type_config['plural'];
-						$post_type->labels->name = $plural;
-						$post_type->labels->menu_name = $plural;
-						$post_type->labels->all_items = "All $plural";
-						$post_type->labels->search_items = "Search $plural";
-						$post_type->labels->not_found = "No $plural found";
-						$post_type->labels->not_found_in_trash = "No $plural found in Trash";
-						$post_type->labels->archives = "$plural Archives";
-						$post_type->labels->attributes = "$plural Attributes";
-					}
-
-					if (isset($post_type_config['args'])) {
-						foreach ($post_type_config['args'] as $key => $value) {
-							$post_type->$key = $value;
-						}
-					}
-				}
-			}, 999);
-		}
+		$post_type = new PostType($key, $post_type_config);
+		add_action('init', [$post_type, 'register_post_type']);
 	}
 
 	protected function register_taxonomies()

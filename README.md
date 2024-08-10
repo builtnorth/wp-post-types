@@ -24,7 +24,7 @@ This library is meant to be dropped into a theme or plugin via composer: `compos
 
 ## Basic Setup
 
-To use PostTypeManager, you need to instantiate the class and call its `init()` method. The way you do this can vary depending on whether you're using it in a theme or a plugin.
+To use PostTypeManager, you need to instantiate the class and call its `init()` method. The way you do this can vary depending on whether you're using it in a theme or a plugin. It is worth noting that if there is a case where the PostTypeManager finds a config file in a plugin and the theme, the theme will override all settings in the plugins config file.
 
 ### Theme Usage
 
