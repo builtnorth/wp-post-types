@@ -83,21 +83,6 @@ $post_type_manager = new PostTypeManager($config);
 $post_type_manager->init();
 ```
 
-## Advanced Usage with PostTypeManager
-
-If you're using the PostTypeManager class to manage your PostTypeManager instance, you can set it up like this:
-
-```php
-use BuiltNorth\Polaris\Features\PostTypeManager;
-
-add_action('init', function() {
-    $post_type_manager = new PostTypeManager();
-    $post_type_manager->register_post_types();
-}, 0);
-```
-
-This approach allows for additional configuration and overrides managed by the PostTypeManager class.
-
 ## Best Practices
 
 1. Always hook into the `init` action when registering post types and taxonomies.
@@ -106,3 +91,13 @@ This approach allows for additional configuration and overrides managed by the P
 4. Consider using a constant for the configuration file path to make it easy to change across your plugin.
 
 By following these initialization methods, you can effectively use PostTypeManager in both theme and plugin contexts, providing flexibility in how and where you manage your custom post type configurations.
+
+## Disclaimer
+
+This software is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software.
+
+Use of this library is at your own risk. The authors and contributors of this project are not responsible for any damage to your website or any loss of data that may result from the use of this library.
+
+While we strive to keep this library up-to-date and secure, we make no guarantees about its performance, reliability, or suitability for any particular purpose. Users are advised to thoroughly test the library in a safe environment before deploying it to a live site.
+
+By using this library, you acknowledge that you have read this disclaimer and agree to its terms.
