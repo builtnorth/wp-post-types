@@ -90,7 +90,7 @@ class PostType
 			'singular_name'         => _x($singular, 'Post type singular name', 'built'),
 			'menu_name'             => _x($plural, 'Admin Menu text', 'built'),
 			'name_admin_bar'        => _x($singular, 'Add New on Toolbar', 'built'),
-			'add_new'               => __('Add New', 'built'),
+			'add_new'				=> __("Add New {$singular}", 'built'),
 			'add_new_item'          => __("Add New {$singular}", 'built'),
 			'new_item'              => __("New {$singular}", 'built'),
 			'edit_item'             => __("Edit {$singular}", 'built'),
@@ -121,8 +121,11 @@ class PostType
 			if (isset($wp_post_types[$name])) {
 				$post_type = &$wp_post_types[$name];
 
-				$singular = $config['singular'] ?? null;
-				$plural = $config['plural'] ?? null;
+				// Don't override the name for existing post types
+				unset($config['name']);
+
+				$singular = $config['singular'] ?? $post_type->labels->singular_name;
+				$plural = $config['plural'] ?? $post_type->labels->name;
 
 				$default_labels = self::get_default_labels($singular, $plural);
 				$custom_labels = $config['labels'] ?? [];
@@ -149,6 +152,13 @@ class PostType
 				if (isset($config['map_meta_cap'])) {
 					$post_type->map_meta_cap = $config['map_meta_cap'];
 				}
+
+				// Add some logging for debugging
+				error_log("Modified post type: " . $name);
+				error_log("Post type labels: " . print_r($post_type->labels, true));
+				error_log("Post type args: " . print_r($post_type, true));
+			} else {
+				error_log("Attempted to modify non-existent post type: " . $name);
 			}
 		}, 999);
 	}
